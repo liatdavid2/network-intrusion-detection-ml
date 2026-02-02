@@ -38,6 +38,13 @@ IDENTIFIER_COLS = [
 
 
 # =========================
+# Logging helper
+# =========================
+def log(step: str, message: str):
+    print(f"[{step}] {message}")
+
+
+# =========================
 # Preprocessing helpers
 # =========================
 def drop_identifier_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -79,62 +86,55 @@ def correlation_filter(df: pd.DataFrame, threshold: float = 0.95):
 # Main pipeline
 # =========================
 def build_features():
-    print(f"Loading data from {RAW_DATA_PATH}")
+    # [1/6] Load data
     df = pd.read_parquet(RAW_DATA_PATH)
+    log("1/6", f"Load data ............... OK ({len(df):,} rows)")
 
+    # [2/6] Target validation
     if TARGET_COL not in df.columns:
         raise ValueError(f"Target column '{TARGET_COL}' not found")
 
-    # Log non-numeric columns (debug / transparency)
-    non_numeric_cols = df.select_dtypes(include=["object", "string"]).columns.tolist()
-    print("Non-numeric columns detected:")
-    print(non_numeric_cols)
-
-    # Separate target
     y = df[TARGET_COL]
+    attack_rate = y.value_counts(normalize=True).get(1, 0) * 100
+    log("2/6", f"Target detected ......... {TARGET_COL} ({attack_rate:.2f}% attacks)")
 
-    # Drop target + known non-features
+    # [3/6] Drop non-numeric / identifiers
+    non_numeric_cols = df.select_dtypes(include=["object", "string"]).columns.tolist()
+
     X = df.drop(
         columns=[c for c in NON_FEATURE_COLS if c in df.columns],
         errors="ignore"
     )
-
-    # Drop identifier columns
     X = drop_identifier_columns(X)
-
-    # Keep numeric features only (critical)
     X = X.select_dtypes(include=[np.number])
 
-    print(f"Numeric feature count before filtering: {X.shape[1]}")
+    log("3/6", f"Drop non-numeric ........ {len(non_numeric_cols)} columns removed")
 
-    # Handle missing values
+    # [4/6] Numeric features + missing values
+    before_features = X.shape[1]
     X = handle_missing_values(X)
+    log("4/6", f"Numeric features ........ {before_features}")
 
-    # Variance filter
-    X, variance_features = variance_filter(X, threshold=0.0)
-    print(f"Features after variance filter: {X.shape[1]}")
+    # [5/6] Feature selection
+    X, _ = variance_filter(X, threshold=0.0)
+    after_variance = X.shape[1]
 
-    # Correlation filter
-    X, dropped_corr_features = correlation_filter(X, threshold=0.95)
-    print(f"Features after correlation filter: {X.shape[1]}")
+    X, _ = correlation_filter(X, threshold=0.95)
+    after_corr = X.shape[1]
 
-    # Reattach target
+    log("5/6", f"Feature selection ....... {after_variance} → {after_corr}")
+
+    # [6/6] Save output
     X[TARGET_COL] = y.values
-
-    # Save output
     OUTPUT_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
     X.to_parquet(OUTPUT_DATA_PATH, index=False)
 
-    print(f"Saved processed features to {OUTPUT_DATA_PATH}")
-    print(f"Final number of features (excluding target): {X.shape[1] - 1}")
+    log("6/6", f"Save features ........... {OUTPUT_DATA_PATH}")
 
-    print("Final feature list:")
-    for col in X.columns:
-        if col != TARGET_COL:
-            print(col)
-
-    print("Target distribution:")
-    print(y.value_counts(normalize=True))
+    # Short summary
+    print("\nClass distribution:")
+    print(f"  normal : {(1 - attack_rate/100)*100:.2f}%")
+    print(f"  attack : {attack_rate:.2f}%")
 
     return list(X.columns)
 

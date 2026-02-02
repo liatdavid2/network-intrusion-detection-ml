@@ -8,7 +8,7 @@ from pathlib import Path
 # Config
 # =========================
 DATA_PATH = Path("data/processed/UNSW_Flow_features.parquet")
-RUN_DIR = Path("artifacts/models/20260202_121045")  # ← לשנות לפי הריצה
+MODELS_ROOT = Path("artifacts/models")
 TARGET_COL = "binary_label"
 
 SHAP_SAMPLE_SIZE = 2000
@@ -17,8 +17,16 @@ RANDOM_STATE = 42
 
 
 # =========================
-# Helper
+# Helpers
 # =========================
+def get_latest_run_dir(models_root: Path) -> Path:
+    run_dirs = [d for d in models_root.iterdir() if d.is_dir()]
+    if not run_dirs:
+        raise RuntimeError("No model run directories found")
+
+    return sorted(run_dirs)[-1]
+
+
 def explain_model(model_name, model, X):
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(X)
@@ -35,9 +43,9 @@ def explain_model(model_name, model, X):
         .head(TOP_K)
     )
 
-    print(f"\nTop {TOP_K} SHAP features for {model_name}:")
+    print(f"\nTop {TOP_K} SHAP features for model: {model_name}")
     for feat, val in importance.items():
-        print(f"  {feat:<25} {val:.4f}")
+        print(f"  {feat:<30} {val:.5f}")
 
     return importance
 
@@ -49,7 +57,6 @@ def main():
     df = pd.read_parquet(DATA_PATH)
     X = df.drop(columns=[TARGET_COL])
 
-    # sample - small and fast
     X_sample = X.sample(
         n=min(SHAP_SAMPLE_SIZE, len(X)),
         random_state=RANDOM_STATE
@@ -57,11 +64,16 @@ def main():
 
     print(f"Using SHAP sample: {len(X_sample)} rows")
 
-    for model_path in RUN_DIR.glob("*.joblib"):
-        model_name = model_path.stem
-        model = joblib.load(model_path)
+    run_dir = get_latest_run_dir(MODELS_ROOT)
+    print(f"Using latest model run: {run_dir.name}")
 
-        explain_model(model_name, model, X_sample)
+    model_paths = list(run_dir.glob("*.joblib"))
+    if not model_paths:
+        raise RuntimeError(f"No .joblib models found in {run_dir}")
+
+    for model_path in model_paths:
+        model = joblib.load(model_path)
+        explain_model(model_path.stem, model, X_sample)
 
 
 if __name__ == "__main__":

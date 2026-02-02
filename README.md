@@ -34,8 +34,11 @@ network-intrusion-detection-ml/
 │   └── models/
 │       └── 20260202_143325/
 │           ├── ExtraTrees.joblib
+│           └── GradientBoosting.joblib
+│           └── HistGradientBoosting.joblib
 │           └── RandomForest.joblib
-│
+│           └── XGBoost.joblib
+│ 
 ├── data/
 │   ├── raw/
 │   └── processed/

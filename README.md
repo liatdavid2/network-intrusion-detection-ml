@@ -89,9 +89,6 @@ The processed dataset is saved to:
 ```text
 data/processed/UNSW_Flow_features.parquet
 ```
-כך מומלץ להוסיף את זה ל־README בצורה **ברורה, מקצועית ומתאימה לתיק עבודות**.
-אפשר פשוט להעתיק-להדביק.
-
 ---
 
 ## Step 3 – Training & Baseline Models
@@ -190,15 +187,6 @@ Confusion Matrix:
 | RandomForest         |  0.9992 |    0.9489 | 0.9084 | 0.9282 |
 | ExtraTrees           |  0.9991 |    0.9329 | 0.9109 | 0.9218 |
 | GradientBoosting     |  0.9990 |    0.9130 | 0.9109 | 0.9120 |
-
----
-
-### Notes
-
-* ROC-AUC is consistently very high across models, indicating strong separability.
-* Precision/Recall trade-offs differ significantly between models.
-* **HistGradientBoosting** provides the best overall balance between Precision, Recall, and F1.
-* **XGBoost** favors Recall and may be suitable for use-cases where false negatives are costly.
 
 ---
 

@@ -1,6 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from datetime import datetime
+import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
@@ -110,6 +111,21 @@ def train():
         stratify=y_sub,
         random_state=RANDOM_STATE,
     )
+    # after train/test split
+    feature_names = list(X_train.columns)
+
+    with open(RUN_DIR / "feature_names.json", "w") as f:
+        json.dump(feature_names, f, indent=2)
+
+    run_config = {
+        "subsample_fraction": SUBSAMPLE_FRACTION,
+        "random_state": RANDOM_STATE,
+        "target_col": TARGET_COL,
+        "n_features": len(feature_names),
+    }
+
+    with open(RUN_DIR / "run_config.json", "w") as f:
+        json.dump(run_config, f, indent=2)
 
     log("3/5", "Train/Test split ...... OK (80/20, stratified)")
 

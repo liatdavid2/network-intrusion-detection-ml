@@ -164,7 +164,7 @@ def train():
         metrics = evaluate_model(name, model, X_test, y_test)
         results[name] = metrics
 
-        joblib.dump(model, MODEL_DIR / f"{name}.joblib")
+        joblib.dump(model, RUN_DIR / f"{name}.joblib")
 
     # [5/5] Summary
     log("5/5", "Baseline comparison completed")

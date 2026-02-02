@@ -42,11 +42,17 @@ network-intrusion-detection-ml/
 └── README.md
 ```
 
-````md
+## Step 1 – EDA
+Exploratory data analysis is performed in the following notebook:
+
+`notebooks/01_dataset_familiarization_unsw_nb15.ipynb`
+
+## Step 2 – Run feature engineering
+
 Run feature engineering:
 ```bash
 python src/build_features.py
-````
+```
 Expected output:
 
 ```text

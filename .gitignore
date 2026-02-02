@@ -6,7 +6,6 @@ data/processed/
 
 # Local artifacts
 artifacts/
-models/
 checkpoints/
 
 # Notebooks checkpoints

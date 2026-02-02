@@ -30,16 +30,29 @@ pip install -r requirements.txt
 
 ```
 network-intrusion-detection-ml/
-├── src/
-│   ├── data/        # Data loading and validation
-│   ├── features/    # Feature engineering
-│   ├── models/      # Training and evaluation
-│   └── utils.py
+├── artifacts/
+│   └── models/
+│       └── 20260202_143325/
+│           ├── ExtraTrees.joblib
+│           └── RandomForest.joblib
+│
 ├── data/
 │   ├── raw/
 │   └── processed/
-├── requirements.txt
-└── README.md
+│
+├── notebooks/
+│   └── 01_dataset_familiarization_unsw_nb15.ipynb
+│
+├── src/
+│   ├── build_features.py
+│   └── models/
+│       ├── train_baseline_models.py
+│       └── explain_models_shap.py
+│
+├── .gitignore
+├── README.md
+└── requirements.txt
+
 ```
 
 ## Step 1 – EDA

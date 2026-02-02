@@ -1,8 +1,3 @@
-ברור. הנה **קובץ README אחד, רציף, נקי, ולא חתוך** — בדיוק איך שמצופה לראות ב-GitHub של פרויקט ML רציני.
-
-פשוט להעתיק כמו שהוא.
-
-````md
 # Network Intrusion Detection – Machine Learning
 
 This project implements a machine learning pipeline for detecting network intrusions based on structured network flow data.  

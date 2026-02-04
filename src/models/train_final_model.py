@@ -57,13 +57,13 @@ def evaluate_thresholds(y_true, y_prob, thresholds):
 
         rows.append(
             {
-                "threshold": t,
+                "threshold": float(t),
                 "precision": precision,
                 "recall": recall,
                 "f1": f1,
                 "fp_rate": fp_rate,
-                "fp_count": fp,
-                "tp_count": tp,
+                "fp_count": int(fp),
+                "tp_count": int(tp),
             }
         )
 
@@ -108,6 +108,26 @@ def train():
     log("2/4", "Train/Test split ...... OK (80/20, stratified)")
 
     # =========================
+    # Save feature metadata
+    # =========================
+    feature_names = list(X_train.columns)
+    with open(run_dir / "feature_names.json", "w") as f:
+        json.dump(feature_names, f, indent=2)
+
+    run_config = {
+        "model": "HistGradientBoosting",
+        "target_col": TARGET_COL,
+        "n_features": len(feature_names),
+        "subsample_fraction": SUBSAMPLE_FRACTION,
+        "test_size": TEST_SIZE,
+        "random_state": RANDOM_STATE,
+        "dataset": str(DATA_PATH),
+    }
+
+    with open(run_dir / "run_config.json", "w") as f:
+        json.dump(run_config, f, indent=2)
+
+    # =========================
     # Final model (best baseline)
     # =========================
     model = HistGradientBoostingClassifier(
@@ -134,7 +154,6 @@ def train():
     thresholds = np.linspace(0.01, 0.99, 99)
     threshold_df = evaluate_thresholds(y_test.values, y_prob, thresholds)
 
-    # Example policy: maximize F1 under FP rate constraint
     selected = threshold_df.sort_values(
         by=["f1"], ascending=False
     ).iloc[0]

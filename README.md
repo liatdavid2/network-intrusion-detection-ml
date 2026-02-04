@@ -189,5 +189,82 @@ Confusion Matrix:
 | GradientBoosting     |  0.9990 |    0.9130 | 0.9109 | 0.9120 |
 
 ---
+## Step 4 – Model Improvement & Decision Threshold Selection
 
+In this step, the focus shifts from model comparison to **operational decision quality**.
+Rather than optimizing ROC-AUC further, we introduce an explicit **decision threshold** to control false positives and make the model production-ready.
+
+### Run training
+
+```bash
+python src/models/train_final_model.py
+```
+
+---
+
+### What happens in this step
+
+1. **Final model selection**
+   Based on Step 3 baseline results, the model with the best overall balance between Precision and Recall is selected:
+
+   * **HistGradientBoostingClassifier**
+
+2. **Score-based evaluation**
+   The model is evaluated using predicted probabilities (`predict_proba`) rather than hard labels.
+   This enables separation between **risk estimation** and **decision logic**.
+
+3. **Automatic threshold discovery**
+   Instead of using a fixed threshold (e.g., 0.5), the script:
+
+   * Evaluates multiple thresholds in the range `[0.01 – 0.99]`
+   * Computes Precision, Recall, F1, and false-positive statistics for each
+   * Selects the threshold that **maximizes F1 score**
+
+   The threshold value is **empirically derived from the data**, not chosen arbitrarily.
+
+4. **Decision policy creation**
+   The selected threshold becomes a first-class component of the system and is stored alongside the model for future inference.
+
+---
+
+### Example output
+
+```
+[0/4] Run directory .......... artifacts/final_model/20260204_153203
+[1/4] Load features .......... OK (2,059,415 rows)
+[2/4] Train/Test split ...... OK (80/20, stratified)
+[3/4] Training final model ... HistGradientBoosting
+[4/4] ROC-AUC (scores only) . 0.9993
+[DONE] Selected threshold ...... 0.480 (Precision=0.937, Recall=0.933)
+```
+
+**Interpretation:**
+
+* The threshold value (0.480) is **not a confidence level**
+* It is the cutoff at which alerts achieve ~94% precision while maintaining high recall
+* This provides strong detection capability without overwhelming the SOC with false positives
+
+---
+
+### Artifacts produced
+
+Each run generates a fully versioned, production-ready package:
+
+* `final_model.joblib` – trained model
+* `decision_policy.json` – selected threshold and selection rationale
+* `threshold_analysis.csv` – metrics across all tested thresholds
+* `feature_names.json` – feature ordering for safe inference
+* `run_config.json` – training configuration for reproducibility
+
+---
+
+### Why this matters
+
+Separating **risk scoring** from **decision thresholds** allows:
+
+* Controlled false-positive rates
+* Threshold changes without retraining
+* Alignment with SOC capacity and risk tolerance
+
+This step transforms a high-performing model into a **deployable detection system**.
 

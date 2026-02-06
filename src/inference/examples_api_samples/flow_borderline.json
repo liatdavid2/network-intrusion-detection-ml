@@ -1,0 +1,67 @@
+{
+  "_meta": {
+    "expected_risk": "BORDERLINE",
+    "rationale": [
+      "Several features are close to decision thresholds",
+      "Moderate fan-out and traffic volume",
+      "No single extreme anomaly dominates the flow"
+    ],
+    "use_case": "Requires human review or correlation with context"
+  },
+
+  "dur": 6.4,
+  "sbytes": 620000,
+  "dbytes": 180000,
+  "spkts": 70,
+  "dpkts": 65,
+
+  "source_port": 41230,
+  "destination_port": 21,
+
+  "sttl": 64,
+  "dttl": 64,
+
+  "sload": 48000.0,
+  "dload": 21000.0,
+
+  "swin": 512,
+  "stcpb": 231245600,
+  "dtcpb": 231245800,
+
+  "smeansz": 160,
+  "dmeansz": 120,
+
+  "trans_depth": 1,
+  "res_bdy_len": 0,
+
+  "sjit": 0.12,
+  "djit": 0.15,
+
+  "stime": 1622548800,
+  "sintpkt": 0.11,
+  "dintpkt": 0.13,
+
+  "tcprtt": 0.09,
+  "synack": 0.04,
+  "ackdat": 0.05,
+
+  "is_sm_ips_ports": 0,
+
+  "ct_state_ttl": 3,
+  "ct_flw_http_mthd": 0,
+  "is_ftp_login": 0,
+  "ct_ftp_cmd": 2,
+
+  "ct_srv_src": 55,
+  "ct_dst_src_ltm": 62,
+
+  "ct_dst_sport_ltm": 42,
+  "ct_srv_dst": 78,
+  "ct_src_ltm": 38,
+  "ct_dst_ltm": 40,
+  "ct_src_dport_ltm": 35,
+
+  "proto": "tcp",
+  "service": "ftp",
+  "state": "CON"
+}

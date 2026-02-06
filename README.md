@@ -29,33 +29,49 @@ pip install -r requirements.txt
 ## Project structure
 
 ```
-network-intrusion-detection-ml/
+NETWORK-INTRUSION-DETECTION-ML
+├── .venv/                         # Local Python virtual environment
+│
 ├── artifacts/
-│   └── models/
-│       └── 20260202_143325/
-│           ├── ExtraTrees.joblib
-│           └── GradientBoosting.joblib
-│           └── HistGradientBoosting.joblib
-│           └── RandomForest.joblib
-│           └── XGBoost.joblib
-│ 
+│   ├── models/                    # Baseline models (joblib)
+│   │
+│   └── final_model/
+│       ├── 20260204_152732/        # Previous training run (timestamped)
+│       └── 20260204_153203/        # Latest final model run
+│           ├── evaluation/
+│           │   ├── roc_curve.png
+│           │   ├── pr_curve.png
+│           │   └── test_metrics.json
+│           │
+│           ├── final_model.joblib  # Trained final model
+│           ├── feature_names.json  # Ordered feature list used for training
+│           ├── run_config.json     # Training configuration & metadata
+│           ├── decision_policy.json# Final decision policy (threshold, logic)
+│           └── threshold_analysis.csv
+│                                   # Precision/Recall tradeoff analysis
+│
 ├── data/
-│   ├── raw/
-│   └── processed/
+│   ├── raw/                       # Original UNSW-NB15 data (not versioned)
+│   └── processed/                 # Cleaned and feature-engineered datasets
 │
 ├── notebooks/
 │   └── 01_dataset_familiarization_unsw_nb15.ipynb
+│                                   # EDA and dataset understanding only
 │
 ├── src/
-│   ├── build_features.py
-│   └── models/
-│       ├── train_baseline_models.py
-│       └── explain_models_shap.py
+│   ├── build_features.py          # Feature engineering pipeline
+│   │
+│   ├── models/
+│   │   ├── train_baseline_models.py
+│   │   │                           # Train & compare baseline models
+│   │   └── train_final_model.py    # Train the selected final model
+│   │
+│   └── evaluation/
+│       └── evaluate_final_model.py # Final evaluation on test data
 │
 ├── .gitignore
-├── README.md
-└── requirements.txt
-
+├── requirements.txt
+└── README.md
 ```
 
 ## Step 1 – EDA

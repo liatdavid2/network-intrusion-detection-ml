@@ -437,4 +437,82 @@ Step 5 confirms that the system is **auditable, reproducible, and ready for depl
 
 ---
 
+## Step 6 – API Simulation via CLI (Inference & Risk Framing)
+
+This step demonstrates how the trained model and the deterministic risk framing logic can be executed **end-to-end via the command line**, simulating an API-style inference call.
+
+Instead of deploying a web service, we expose the inference logic through a CLI interface that mirrors how an API endpoint would behave:
+input → prediction → risk framing → structured JSON output.
+
+---
+
+### Running Inference on a Low-Risk Flow
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/flow_low_risk.json
+```
+
+Output:
+
+```json
+{
+  "risk_score": 0.0,
+  "risk_level": "LOW",
+  "reasons": []
+}
+```
+
+**Interpretation:**
+
+* The model assigns an extremely low probability to an attack.
+* No risk rules are triggered.
+* The flow is classified as clearly benign and produces no alerts or explanations.
+
+---
+
+### Running Inference on a High-Risk Flow
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/flow_high_risk.json
+```
+
+Output:
+
+```json
+{
+  "risk_score": 0.9784,
+  "risk_level": "HIGH",
+  "reasons": [
+    "Unusually long connection duration",
+    "Large outbound data transfer",
+    "High fan-out to destination ports",
+    "High number of connections to the same destination"
+  ]
+}
+```
+
+**Interpretation:**
+
+* The model assigns a very high probability to an attack.
+* Multiple deterministic risk rules are triggered based on raw flow features.
+* The output includes both a quantitative risk score and human-readable explanations suitable for SOC analysts or downstream systems.
+
+---
+
+### Why This Design
+
+* The model is trained on a **binary task only** (`attack` vs. `benign`).
+* Risk levels (`LOW`, `HIGH`) and explanations are derived **after inference** using a separate, deterministic risk-framing layer.
+* This separation allows:
+
+  * Stable model training
+  * Transparent, explainable decisions
+  * Easy transition from CLI simulation to a real REST API (e.g., FastAPI)
+
+
+
 

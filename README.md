@@ -446,15 +446,96 @@ Output:
 
 ---
 
-### Why This Design
+## Step 6 (Extended) – API Simulation with SHAP Explanations (CLI)
+
+In addition to standard risk prediction, the CLI supports **optional SHAP-based explainability** for single-flow inference.
+This mode is intended for **debugging, investigation, and analyst drill-down**, not for high-throughput batch usage.
+
+SHAP explanations are returned as **Top-5 features by absolute contribution**, ensuring concise and actionable output.
+
+---
+
+### High-Risk Flow with SHAP Explanation
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/flow_high_risk.json --explain shap
+```
+
+Output:
+
+```json
+{
+  "risk_score": 0.9784,
+  "risk_level": "HIGH",
+  "reasons": [
+    "Unusually long connection duration",
+    "Large outbound data transfer",
+    "High fan-out to destination ports",
+    "High number of connections to the same destination"
+  ],
+  "shap_top_5_values": {
+    "sttl": 9.499049674149832,
+    "ct_state_ttl": 4.424585564732738,
+    "ct_dst_sport_ltm": 1.2731662270240485,
+    "ct_srv_src": -0.7075171171852086,
+    "destination_port": 0.5992478361381254
+  }
+}
+```
+
+**Interpretation:**
+
+* The model assigns very high confidence to an attack.
+* Multiple deterministic risk rules are triggered.
+* SHAP highlights the top 5 features that most strongly influenced the prediction, including both positive and negative contributions.
+* Explanations combine **domain rules** (why it is risky) with **model-level attribution** (what drove the prediction).
+
+---
+
+### Low-Risk Flow with SHAP Explanation
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/flow_low_risk.json --explain shap
+```
+
+Output:
+
+```json
+{
+  "risk_score": 0.0,
+  "risk_level": "LOW",
+  "reasons": [],
+  "shap_top_5_values": {
+    "sttl": -0.6765036614612417,
+    "sintpkt": 0.5787860138168665,
+    "stime": 0.42347297708016335,
+    "ct_state_ttl": -0.315744233391285,
+    "smeansz": -0.2278311339103425
+  }
+}
+```
+
+**Interpretation:**
+
+* The model assigns an extremely low probability to an attack.
+* No risk rules are triggered.
+* SHAP values still show which features contributed most to the benign classification, including features that actively reduce risk.
+
+---
+
+### Design Notes
 
 * The model is trained on a **binary task only** (`attack` vs. `benign`).
-* Risk levels (`LOW`, `HIGH`) and explanations are derived **after inference** using a separate, deterministic risk-framing layer.
-* This separation allows:
+* SHAP is **optional and on-demand**, enabled via `--explain shap`.
+* Only the **Top-5 SHAP values** (by absolute contribution) are returned to keep explanations concise.
+* This CLI interface mirrors how a production API endpoint (e.g., `POST /predict`) would behave, including optional explainability.
 
-  * Stable model training
-  * Transparent, explainable decisions
-  * Easy transition from CLI simulation to a real REST API (e.g., FastAPI)
+---
+
 
 
 

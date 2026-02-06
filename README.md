@@ -336,50 +336,6 @@ Model comparison or selection does **not** occur in Step 5.
 
 ---
 
-#### Test Set Handling
-
-```
-test.parquet not found – reconstructing test split from full dataset
-```
-
-A physical `test.parquet` file was not found, so the test set was **deterministically reconstructed** using the original training configuration:
-
-* Same dataset file
-* Same feature list and order
-* Same `test_size`
-* Same `random_state`
-* Same label stratification
-
-Because the split is deterministic, this reconstruction yields **exactly the same test samples** used during training.
-
-No data leakage occurs, as:
-
-* The model is already trained
-* The decision threshold is already frozen
-* The test set is used only for measurement
-
----
-
-#### Decision Threshold
-
-```
-Threshold : 0.48000000000000004
-```
-
-The threshold is loaded from `decision_policy.json`.
-
-It represents an **explicit operational decision**, chosen earlier (e.g. to favor recall over precision in cybersecurity).
-
-The threshold is:
-
-* Not hard-coded
-* Not inferred during evaluation
-* Not tuned on test data
-
-If the decision policy is missing, evaluation fails intentionally.
-
----
-
 #### Metrics
 
 ```
@@ -421,21 +377,8 @@ Interpreted as:
 * **False Negatives (1,479)**
   Attacks missed by the model (security risk)
 
-In cybersecurity, **false negatives typically carry a higher cost than false positives**.
-The chosen threshold reflects this trade-off.
-
 ---
 
-### Summary of Step 5
-
-* The model, features, and decision threshold are fully frozen
-* Evaluation is performed strictly on the test set
-* No learning or tuning occurs
-* Results reflect realistic production behavior
-
-Step 5 confirms that the system is **auditable, reproducible, and ready for deployment**, not just statistically accurate.
-
----
 
 ## Step 6 – API Simulation via CLI (Inference & Risk Framing)
 

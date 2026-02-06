@@ -29,49 +29,55 @@ pip install -r requirements.txt
 ## Project structure
 
 ```
-NETWORK-INTRUSION-DETECTION-ML
-├── .venv/                         # Local Python virtual environment
-│
-├── artifacts/
-│   ├── models/                    # Baseline models (joblib)
+network-intrusion-detection-ml/          # Root of the project repository
+
+├── .venv/                               # Local Python virtual environment (development only)
+
+├── artifacts/                           # All generated artifacts (models, metrics, configs)
+│   ├── final_model/                     # Final, production-ready model runs
+│   │   └── 20260204_153203/              # Timestamped model run (single immutable experiment)
+│   │       ├── evaluation/              # Evaluation outputs on the test set
+│   │       │   ├── roc_curve.png         # ROC curve of the final model
+│   │       │   ├── pr_curve.png          # Precision-Recall curve
+│   │       │   └── test_metrics.json     # Final test metrics (Precision, Recall, F1, etc.)
+│   │       │
+│   │       ├── decision_policy.json      # Decision thresholds and risk policy configuration
+│   │       ├── feature_names.json        # Ordered list of features used during training
+│   │       ├── final_model.joblib        # Serialized trained model used for inference
+│   │       ├── run_config.json           # Training configuration (seed, sampling, parameters)
+│   │       └── threshold_analysis.csv    # Threshold vs. metric analysis used to select cutoff
 │   │
-│   └── final_model/
-│       ├── 20260204_152732/        # Previous training run (timestamped)
-│       └── 20260204_153203/        # Latest final model run
-│           ├── evaluation/
-│           │   ├── roc_curve.png
-│           │   ├── pr_curve.png
-│           │   └── test_metrics.json
-│           │
-│           ├── final_model.joblib  # Trained final model
-│           ├── feature_names.json  # Ordered feature list used for training
-│           ├── run_config.json     # Training configuration & metadata
-│           ├── decision_policy.json# Final decision policy (threshold, logic)
-│           └── threshold_analysis.csv
-│                                   # Precision/Recall tradeoff analysis
-│
-├── data/
-│   ├── raw/                       # Original UNSW-NB15 data (not versioned)
-│   └── processed/                 # Cleaned and feature-engineered datasets
-│
-├── notebooks/
-│   └── 01_dataset_familiarization_unsw_nb15.ipynb
-│                                   # EDA and dataset understanding only
-│
-├── src/
-│   ├── build_features.py          # Feature engineering pipeline
+│   └── models/                          # Baseline or intermediate models (optional / exploratory)
+
+├── data/                                # Dataset storage
+│   ├── raw/                             # Original UNSW-NB15 data (never modified)
+│   └── processed/                       # Cleaned and feature-engineered datasets
+
+├── notebooks/                           # Exploratory notebooks (EDA, analysis, experiments)
+
+├── src/                                 # All executable source code
+│   ├── build_features.py                # Feature engineering pipeline (raw → processed)
 │   │
-│   ├── models/
-│   │   ├── train_baseline_models.py
-│   │   │                           # Train & compare baseline models
-│   │   └── train_final_model.py    # Train the selected final model
+│   ├── models/                          # Model training logic
+│   │   ├── train_baseline_models.py     # Training of baseline models for comparison
+│   │   └── train_final_model.py         # Training of the selected final model
 │   │
-│   └── evaluation/
-│       └── evaluate_final_model.py # Final evaluation on test data
-│
-├── .gitignore
-├── requirements.txt
-└── README.md
+│   ├── evaluation/                      # Model evaluation logic
+│   │   └── evaluate_final_model.py      # Evaluation on held-out test set
+│   │
+│   └── inference/                       # Inference and API simulation layer
+│       ├── predict.py                   # Production-style CLI for single & batch inference
+│       ├── make_batch_flows.py          # Utility to create mixed attack/benign batch inputs
+│       │
+│       └── examples_api_samples/        # Example inputs for API / CLI simulation
+│           ├── flow_low_risk.json        # Single benign flow example
+│           ├── flow_high_risk.json       # Single attack flow example
+│           └── batch_flows.parquet       # Mixed batch of benign + attack flows
+
+├── .gitignore                           # Git ignore rules (data, artifacts, venv, etc.)
+├── README.md                            # Project documentation
+└── requirements.txt                    # Python dependencies
+
 ```
 
 ## Step 1 – EDA

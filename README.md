@@ -527,12 +527,155 @@ Output:
 
 ---
 
-### Design Notes
+## Step 6 (Extended) – Batch Data Preparation and Inference Validation
+
+This step demonstrates the **end-to-end inference workflow** for both single-flow and batch processing, including explainability and validation of mixed benign/attack inputs.
+
+The goal is to validate that:
+
+* The model produces sensible risk scores across different flows
+* Batch inference behaves consistently with single inference
+* Rule-based explanations remain conservative and deterministic
+
+---
+
+### 6.1 Creating a Mixed Batch Input (Attack + Benign)
+
+We first generate a batch input file containing a balanced mix of attack and benign flows, sampled directly from the processed UNSW-NB15 dataset.
+
+Command:
+
+```bash
+python src/inference/make_batch_flows.py
+```
+
+Console output:
+
+```text
+Loading latest feature list from final_model artifacts...
+Loading processed dataset...
+Sampling attack=10, benign=10 ...
+Saved: src/inference/examples_api_samples/batch_flows.parquet
+Preview label counts (if available):
+binary_label
+1    10
+0    10
+```
+
+**Explanation:**
+
+* The script loads the feature schema from the latest trained model run.
+* It samples an equal number of attack and benign flows.
+* The resulting `batch_flows.parquet` file is guaranteed to be compatible with the inference pipeline.
+* Labels are kept only for offline verification; they are ignored during inference.
+
+---
+
+### 6.2 Single-Flow Inference with SHAP (Low-Risk Example)
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/flow_low_risk.json --explain shap
+```
+
+Output:
+
+```json
+{
+  "risk_score": 0.0,
+  "risk_level": "LOW",
+  "reasons": [],
+  "shap_top_5_values": {
+    "sttl": -0.6765,
+    "sintpkt": 0.5788,
+    "stime": 0.4235,
+    "ct_state_ttl": -0.3157,
+    "smeansz": -0.2278
+  }
+}
+```
+
+**Interpretation:**
+
+* The model assigns an extremely low probability to an attack.
+* No deterministic risk rules are triggered.
+* SHAP still highlights the most influential features, including both positive and negative contributions, explaining *why* the flow is considered benign.
+
+---
+
+### 6.3 Batch Inference on Mixed Flows
+
+We now run batch inference on the generated parquet file.
+
+Command:
+
+```bash
+python src/inference/predict.py --input src/inference/examples_api_samples/batch_flows.parquet --batch
+```
+
+Output (excerpt):
+
+```json
+[
+  {
+    "row_index": 0,
+    "risk_score": 0.988,
+    "risk_level": "HIGH",
+    "reasons": []
+  },
+  {
+    "row_index": 1,
+    "risk_score": 0.0,
+    "risk_level": "LOW",
+    "reasons": []
+  },
+  {
+    "row_index": 4,
+    "risk_score": 0.5616,
+    "risk_level": "MEDIUM",
+    "reasons": []
+  },
+  {
+    "row_index": 11,
+    "risk_score": 0.9998,
+    "risk_level": "HIGH",
+    "reasons": []
+  }
+]
+```
+
+**Interpretation:**
+
+* The batch contains a mix of `LOW`, `MEDIUM`, and `HIGH` risk flows, as expected.
+* High-risk flows often receive very high confidence scores due to strong learned patterns in the data.
+* Most entries have empty `reasons` because:
+
+  * Rule-based explanations are intentionally conservative.
+  * Many attacks are detected by the model through feature combinations rather than extreme threshold violations.
+
+---
+
+### 6.4 Design Rationale
 
 * The model is trained on a **binary task only** (`attack` vs. `benign`).
-* SHAP is **optional and on-demand**, enabled via `--explain shap`.
-* Only the **Top-5 SHAP values** (by absolute contribution) are returned to keep explanations concise.
-* This CLI interface mirrors how a production API endpoint (e.g., `POST /predict`) would behave, including optional explainability.
+* Risk levels (`LOW`, `MEDIUM`, `HIGH`) are derived from probability thresholds after inference.
+* Rule-based explanations are:
+
+  * Deterministic
+  * Interpretable
+  * Independent of the model
+* SHAP explanations are:
+
+  * Optional
+  * Available only for single-flow inference
+  * Limited to Top-5 features for clarity and performance
+
+This design mirrors real-world production systems where:
+
+* Batch jobs compute large-scale risk snapshots
+* APIs handle single events and investigations
+* Explainability is applied selectively and on demand
 
 ---
 

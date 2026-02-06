@@ -27,6 +27,7 @@ import sys
 
 import joblib
 import pandas as pd
+import shap
 
 
 # =========================
@@ -176,8 +177,8 @@ def predict_batch(
     return results
 
 
-def explain_with_shap(flow: dict, model, feature_names: list[str]):
-    import shap
+def explain_with_shap(flow: dict, model, feature_names: list[str], top_k: int = 5):
+    
 
     row = pd.Series(flow)
     X = pd.DataFrame(
@@ -186,9 +187,21 @@ def explain_with_shap(flow: dict, model, feature_names: list[str]):
     )
 
     explainer = shap.TreeExplainer(model)
-    shap_values = explainer.shap_values(X)
+    shap_values = explainer.shap_values(X)[0]
 
-    return dict(zip(feature_names, shap_values[0].tolist()))
+    shap_dict = dict(zip(feature_names, shap_values))
+
+    # sort by absolute contribution and keep top-k
+    top_shap = dict(
+        sorted(
+            shap_dict.items(),
+            key=lambda item: abs(item[1]),
+            reverse=True,
+        )[:top_k]
+    )
+
+    return top_shap
+
 
 
 # =========================
@@ -244,7 +257,7 @@ def main():
     result = predict_single(flow, model, feature_names, threshold)
 
     if args.explain == "shap":
-        result["shap_values"] = explain_with_shap(flow, model, feature_names)
+        result["shap_top_5_values"] = explain_with_shap(flow, model, feature_names)
 
     print(json.dumps(result, indent=2))
 

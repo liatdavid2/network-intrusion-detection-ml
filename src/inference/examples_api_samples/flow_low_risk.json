@@ -1,0 +1,58 @@
+{
+  "_meta": {
+    "expected_risk": "LOW",
+    "note": "All features populated according to feature_names.json (non-label). Values represent a natural benign UDP/DNS flow."
+  },
+
+  "source_port": 54231,
+  "destination_port": 53,
+
+  "dur": 1.2,
+  "sbytes": 4800,
+  "dbytes": 5200,
+
+  "sttl": 64,
+  "dttl": 64,
+
+  "sload": 5200.0,
+  "dload": 6100.0,
+
+  "spkts": 14,
+
+  "swin": 0,
+  "stcpb": 0,
+  "dtcpb": 0,
+
+  "smeansz": 340,
+  "dmeansz": 350,
+
+  "trans_depth": 0,
+  "res_bdy_len": 0,
+
+  "sjit": 0.02,
+  "djit": 0.02,
+
+  "stime": 1622548800,
+  "sintpkt": 0.18,
+  "dintpkt": 0.20,
+
+  "tcprtt": 0.0,
+  "synack": 0.0,
+  "ackdat": 0.0,
+
+  "is_sm_ips_ports": 0,
+
+  "ct_state_ttl": 1,
+  "ct_flw_http_mthd": 0,
+  "is_ftp_login": 0,
+  "ct_ftp_cmd": 0,
+
+  "ct_srv_src": 2,
+  "ct_srv_dst": 3,
+
+  "ct_dst_ltm": 3,
+  "ct_src_ltm": 3,
+  "ct_src_dport_ltm": 2,
+  "ct_dst_sport_ltm": 2,
+  "ct_dst_src_ltm": 2
+}

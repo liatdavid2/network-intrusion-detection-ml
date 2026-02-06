@@ -29,50 +29,57 @@ pip install -r requirements.txt
 ## Project structure
 
 ```
-network-intrusion-detection-ml/          # Root of the project repository
+network-intrusion-detection-ml/          # Project root
 
 ├── .venv/                               # Local Python virtual environment (development only)
 
-├── artifacts/                           # All generated artifacts (models, metrics, configs)
-│   ├── final_model/                     # Final, production-ready model runs
-│   │   └── 20260204_153203/              # Timestamped model run (single immutable experiment)
-│   │       ├── evaluation/              # Evaluation outputs on the test set
-│   │       │   ├── roc_curve.png         # ROC curve of the final model
+├── artifacts/                           # Generated artifacts (read-only for inference/monitoring)
+│   ├── final_model/                     # Final, production-ready model artifacts
+│   │   └── 20260204_153203/              # Timestamped immutable model run
+│   │       ├── evaluation/              # Test-set evaluation outputs
 │   │       │   ├── pr_curve.png          # Precision-Recall curve
-│   │       │   └── test_metrics.json     # Final test metrics (Precision, Recall, F1, etc.)
+│   │       │   ├── roc_curve.png         # ROC curve
+│   │       │   └── test_metrics.json     # Final evaluation metrics
 │   │       │
-│   │       ├── decision_policy.json      # Decision thresholds and risk policy configuration
-│   │       ├── feature_names.json        # Ordered list of features used during training
-│   │       ├── final_model.joblib        # Serialized trained model used for inference
-│   │       ├── run_config.json           # Training configuration (seed, sampling, parameters)
-│   │       └── threshold_analysis.csv    # Threshold vs. metric analysis used to select cutoff
+│   │       ├── decision_policy.json      # Risk thresholds and decision logic
+│   │       ├── feature_names.json        # Ordered list of model input features
+│   │       ├── final_model.joblib        # Serialized trained model
+│   │       ├── run_config.json           # Training configuration and metadata
+│   │       └── threshold_analysis.csv    # Threshold vs. metric analysis
 │   │
-│   └── models/                          # Baseline or intermediate models (optional / exploratory)
+│   ├── models/                          # Baseline or intermediate model artifacts
+│   │
+│   └── monitoring/                      # Monitoring outputs
+│       └── latest_report/               # Latest drift detection report
+│           ├── monitoring_report.json   # Full drift report (features + predictions)
+│           └── monitoring_summary.csv   # Flat summary for quick inspection
 
 ├── data/                                # Dataset storage
 │   ├── raw/                             # Original UNSW-NB15 data (never modified)
-│   └── processed/                       # Cleaned and feature-engineered datasets
+│   └── processed/                       # Feature-engineered datasets used for training/inference
 
-├── notebooks/                           # Exploratory notebooks (EDA, analysis, experiments)
+├── notebooks/                           # Exploratory notebooks (EDA, experiments)
 
-├── src/                                 # All executable source code
+├── src/                                 # Source code
 │   ├── build_features.py                # Feature engineering pipeline (raw → processed)
 │   │
-│   ├── models/                          # Model training logic
-│   │   ├── train_baseline_models.py     # Training of baseline models for comparison
+│   ├── models/                          # Model training code
+│   │   ├── train_baseline_models.py     # Baseline model training for comparison
 │   │   └── train_final_model.py         # Training of the selected final model
 │   │
-│   ├── evaluation/                      # Model evaluation logic
-│   │   └── evaluate_final_model.py      # Evaluation on held-out test set
+│   ├── evaluation/                      # Evaluation logic
+│   │   └── evaluate_final_model.py      # Final evaluation on held-out test set
 │   │
-│   └── inference/                       # Inference and API simulation layer
-│       ├── predict.py                   # Production-style CLI for single & batch inference
-│       ├── make_batch_flows.py          # Utility to create mixed attack/benign batch inputs
-│       │
-│       └── examples_api_samples/        # Example inputs for API / CLI simulation
-│           ├── flow_low_risk.json        # Single benign flow example
-│           ├── flow_high_risk.json       # Single attack flow example
-│           └── batch_flows.parquet       # Mixed batch of benign + attack flows
+│   ├── inference/                       # Inference & API simulation layer
+│   │   ├── predict.py                   # Production-style CLI (single & batch inference)
+│   │   ├── make_batch_flows.py          # Utility to generate mixed attack/benign batches
+│   │   └── examples_api_samples/        # Example inputs for inference
+│   │       ├── flow_low_risk.json        # Single benign flow example
+│   │       ├── flow_high_risk.json       # Single attack flow example
+│   │       └── batch_flows.parquet       # Mixed batch for batch inference
+│   │
+│   └── monitoring/                      # Monitoring & drift detection
+│       └── run_monitoring.py             # Offline monitoring (PSI, KS, retraining logic)
 
 ├── .gitignore                           # Git ignore rules (data, artifacts, venv, etc.)
 ├── README.md                            # Project documentation

@@ -685,6 +685,101 @@ This design mirrors real-world production systems where:
 
 ---
 
+## Step 7 – Monitoring & Drift Detection (Offline, Production-Oriented)
+
+This step demonstrates **post-deployment monitoring**, focusing on detecting when a trained model may no longer be reliable due to changes in data or prediction behavior.
+
+Although implemented offline, the design mirrors real-world production monitoring systems.
+
+---
+
+### 7.1 Monitoring Goals
+
+The monitoring layer answers three key questions:
+
+1. **Data Drift** –
+   Has the distribution of input features changed compared to the training baseline?
+
+2. **Prediction Drift** –
+   Has the distribution of model predictions (`risk_score`) changed over time?
+
+3. **Retraining Decision** –
+   Should the model be considered a candidate for retraining?
+
+---
+
+### 7.2 Monitoring Metrics
+
+The following metrics are used:
+
+* **PSI (Population Stability Index)**
+  Measures distribution shift using quantile-based bins derived from a reference dataset.
+
+* **KS Statistic (Kolmogorov–Smirnov)**
+  Measures the maximum difference between two cumulative distributions.
+
+---
+
+### 7.3 Running Monitoring
+
+Command:
+
+```bash
+python src/monitoring/run_monitoring.py ^
+  --reference data/processed/UNSW_Flow_features.parquet ^
+  --current src/inference/examples_api_samples/batch_flows.parquet
+```
+
+Output (console):
+
+```text
+Saved monitoring report to: artifacts/monitoring/latest_report
+Drifted features: 30
+Prediction drift alert: True
+Retraining candidate: True
+```
+
+---
+
+### 7.4 Interpretation of the Results
+
+#### Data Drift
+
+* The monitoring detected **30 drifted features**.
+* This indicates that many feature distributions in the current dataset differ significantly from the reference dataset.
+* This is expected because:
+
+  * The reference dataset represents large-scale historical traffic.
+  * The current dataset is a small, intentionally mixed batch (attack + benign).
+  * Small, non-representative samples naturally produce high PSI and KS values.
+
+Example (Top 10 features by PSI):
+
+```text
+feature      psi       ks  alert
+dmeansz 5.55   0.41   True
+dload   5.12   0.40   True
+sload   4.77   0.33   True
+```
+
+* PSI values above ~0.25 already indicate meaningful drift.
+* PSI values above 1.0 indicate **severe distribution shift**.
+* The observed values therefore represent **strong and expected drift**.
+
+---
+
+#### Prediction Drift
+
+```text
+Prediction drift alert: True
+```
+
+* The distribution of `risk_score` values in the current batch differs significantly from the reference distribution.
+* This confirms that the drift is not only at the feature level, but also **affects model behavior**.
+
+---
+
+
 
 
 

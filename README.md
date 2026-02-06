@@ -268,3 +268,157 @@ Separating **risk scoring** from **decision thresholds** allows:
 
 This step transforms a high-performing model into a **deployable detection system**.
 
+---
+
+## Step 5 – Final Evaluation & Decision Freezing
+
+### Running the Evaluation
+
+Final evaluation is executed using the following command:
+
+```bash
+python src\evaluation\evaluate_final_model.py
+```
+
+This script performs **read-only evaluation** of the frozen model and decision policy.
+No training, tuning, or threshold selection occurs at this stage.
+
+---
+
+### Example Output
+
+```
+Using artifacts from: artifacts\final_model\20260204_153203
+test.parquet not found – reconstructing test split from full dataset
+=== Final Test Evaluation ===
+Run directory     : artifacts\final_model\20260204_153203
+Threshold         : 0.48000000000000004
+Precision         : 0.9280
+Recall            : 0.9258
+F1 Score          : 0.9269
+Confusion Matrix:
+[[390522   1432]
+ [  1479  18450]]
+```
+
+---
+
+### Explanation of the Output
+
+#### Artifact Selection
+
+```
+Using artifacts from: artifacts\final_model\20260204_153203
+```
+
+The evaluation pipeline automatically selects the **most recent finalized training run** under `artifacts/final_model/`.
+
+* Only directories containing `final_model.joblib` are considered
+* The latest timestamped run is assumed to be the chosen *final model*
+
+Model comparison or selection does **not** occur in Step 5.
+
+---
+
+#### Test Set Handling
+
+```
+test.parquet not found – reconstructing test split from full dataset
+```
+
+A physical `test.parquet` file was not found, so the test set was **deterministically reconstructed** using the original training configuration:
+
+* Same dataset file
+* Same feature list and order
+* Same `test_size`
+* Same `random_state`
+* Same label stratification
+
+Because the split is deterministic, this reconstruction yields **exactly the same test samples** used during training.
+
+No data leakage occurs, as:
+
+* The model is already trained
+* The decision threshold is already frozen
+* The test set is used only for measurement
+
+---
+
+#### Decision Threshold
+
+```
+Threshold : 0.48000000000000004
+```
+
+The threshold is loaded from `decision_policy.json`.
+
+It represents an **explicit operational decision**, chosen earlier (e.g. to favor recall over precision in cybersecurity).
+
+The threshold is:
+
+* Not hard-coded
+* Not inferred during evaluation
+* Not tuned on test data
+
+If the decision policy is missing, evaluation fails intentionally.
+
+---
+
+#### Metrics
+
+```
+Precision : 0.9280
+Recall    : 0.9258
+F1 Score  : 0.9269
+```
+
+* **Precision (0.928)**
+  ~93% of alerts correspond to real attacks
+  → Low alert noise for analysts
+
+* **Recall (0.9258)**
+  ~92.6% of attacks are successfully detected
+  → Few attacks are missed
+
+* **F1 Score (0.9269)**
+  Strong balance between detection coverage and alert quality
+
+---
+
+#### Confusion Matrix
+
+```
+[[390522   1432]
+ [  1479  18450]]
+```
+
+Interpreted as:
+
+|                   | Predicted Normal | Predicted Attack |
+| ----------------- | ---------------- | ---------------- |
+| **Actual Normal** | 390,522          | 1,432 (FP)       |
+| **Actual Attack** | 1,479 (FN)       | 18,450 (TP)      |
+
+* **False Positives (1,432)**
+  Benign flows flagged as attacks (analyst noise)
+
+* **False Negatives (1,479)**
+  Attacks missed by the model (security risk)
+
+In cybersecurity, **false negatives typically carry a higher cost than false positives**.
+The chosen threshold reflects this trade-off.
+
+---
+
+### Summary of Step 5
+
+* The model, features, and decision threshold are fully frozen
+* Evaluation is performed strictly on the test set
+* No learning or tuning occurs
+* Results reflect realistic production behavior
+
+Step 5 confirms that the system is **auditable, reproducible, and ready for deployment**, not just statistically accurate.
+
+---
+
+
